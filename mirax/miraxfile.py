@@ -66,7 +66,10 @@ class MiraxFile:
         self.thumbnail = Image.open(filepath)
         # read the config file
         config = configparser.ConfigParser()
-        config.read(str(Path(self.filepath.parent, self.filepath.stem, "Slidedat.ini")))
+        config.read(
+            str(Path(self.filepath.parent, self.filepath.stem, "Slidedat.ini")),
+            encoding="utf-8-sig",
+        )
         self.config = dict()
         sections = config.sections()
         for section in sections:
@@ -107,7 +110,10 @@ class MiraxFile:
             # verify version
             v1 = self.config["GENERAL"]["slide_version"]
             v2 = fp.read(len(v1)).decode("utf-8")
-            assert v1 == v2
+            if v1 != v2:
+                self.logger.warning(
+                    f"version from slidedat.ini is {v1} but version from index.dat is {v2}"
+                )
             # verify UUID
             uuid1 = self.config["GENERAL"]["slide_id"]
             uuid2 = fp.read(len(uuid1)).decode("utf-8")
@@ -163,7 +169,7 @@ class MiraxFile:
         return coords
 
     def save_all_tiles(self, pth: Path = Path.cwd(), level=0):
-        if self.hierarchicals[level].name != 'Slide zoom level':
+        if self.hierarchicals[level].name != "Slide zoom level":
             self.logger.error("Not a zoomlevel")
             return
         for page in self.hierarchicals[level].pages:
