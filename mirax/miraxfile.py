@@ -1,4 +1,5 @@
 import os
+import zlib
 from io import BytesIO
 from pathlib import Path
 from typing import Union, Any, List, BinaryIO, Tuple
@@ -149,6 +150,8 @@ class MiraxFile:
         with open(Path(self.filepath.parent, self.filepath.stem, filename), "rb") as fp:
             fp.seek(pe.offset)
             pagebytes = fp.read(pe.length)
+        if pagebytes[0:3] == b'x\x9C\xED':  # data is using zlib compression
+            return zlib.decompress(pagebytes)
         return pagebytes
 
     def decode_tiles(self, pagebytes: bytes) -> List[Tuple[int, int, bool]]:
